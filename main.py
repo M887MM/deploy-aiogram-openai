@@ -21,7 +21,7 @@ openai.api_key = OPENAI_API_KEY
 
 
 async def create_response(text: str):
-    res = await openai.chat.completions.create(
+    res = openai.chat.completions.create(
         model="gpt-5-nano-2025-08-07",
         messages=[{"role": "user" , "content": text}],
     )
