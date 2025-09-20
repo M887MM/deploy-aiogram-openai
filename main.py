@@ -1,11 +1,54 @@
-import os
+
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
+from aiogram import Router
+from aiogram.filters import CommandStart, StateFilter
+from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from generator import create_response
+import os
 from dotenv import load_dotenv
-from handler import router
+from openai import AsyncOpenAI
 
 load_dotenv()
+
+OPENAI_API_KEY = os.getenv("API_KEY")
+client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
+
+async def create_response(text: str):
+    response = await client.responses.create(
+        model="gpt-5-nano-2025-08-07",
+        input=text
+    )
+    return response.output_text
+
+
+router = Router()
+
+@router.message(CommandStart())
+async def cmd_start(message: Message):
+    await message.answer('Добро пожаловать в гпт5!')
+
+
+@router.message(StateFilter('generating'))
+async def wait_response(message: Message):
+    await message.answer('Ожидайте! Идёт генерация ответа...')
+
+
+@router.message()
+async def generate_answer(message: Message, state: FSMContext):
+    await state.set_state('generating')
+
+    try:
+        response = await create_response(message.text)
+    except Exception as e:
+        await message.answer(f'Произошла ошибка: {e}')
+    else:
+        await message.answer(response)
+    finally:
+        await state.clear()
 
 bot = Bot(token=os.getenv('TOKEN'))
 dp = Dispatcher()
