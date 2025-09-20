@@ -6,11 +6,10 @@ from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from generator import create_response
 import os
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-import httpx, openai
+import httpx , openai
 print("httpx version:", httpx.__version__)
 print("openai version:", openai.__version__)
 
