@@ -17,16 +17,15 @@ print("openai version:", openai.__version__)
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("API_KEY")
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY
 
 
 async def create_response(text: str):
-    response = await client.responses.create(
+    res = await openai.chat.completions.create(
         model="gpt-5-nano-2025-08-07",
-        input=text
+        messages=[{"role": "user" , "content": text}],
     )
-    return response.output_text
-
+    return res.choices[0].message.content
 
 router = Router()
 
