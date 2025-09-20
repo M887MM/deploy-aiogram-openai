@@ -3,8 +3,7 @@ from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from dotenv import load_dotenv
-
-from handlers import router
+from handler import router
 
 load_dotenv()
 

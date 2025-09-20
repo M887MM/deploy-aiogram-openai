@@ -2,8 +2,7 @@ from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-
-from generators import create_response
+from generator import create_response
 
 router = Router()
 
