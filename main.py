@@ -10,6 +10,10 @@ from generator import create_response
 import os
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
+import httpx, openai
+print("httpx version:", httpx.__version__)
+print("openai version:", openai.__version__)
+
 
 load_dotenv()
 
