@@ -53,8 +53,11 @@ async def generate_answer(message: Message, state: FSMContext):
         await state.clear()
 
 bot = Bot(token=os.getenv('TOKEN'))
+GROUP_ID = os.getenv('GROUP_ID')
+
 dp = Dispatcher()
 dp.include_router(router)
+dp.bot_group_id = GROUP_ID
 
 async def handle(request):
     data = await request.json()

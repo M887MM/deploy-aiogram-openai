@@ -1,18 +1,17 @@
 import os
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
+import openai
 
-# Загружаем переменные из .env
 load_dotenv()
+openai.api_key = os.getenv('API_KEY')
 
-# Берём ключ из переменных окружения
-OPENAI_API_KEY = os.getenv('API_KEY')
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-
-
-async def create_response(text: str):
-    response = await client.responses.create(
-        model="gpt-5",
-        input=text
+async def create_response(text):
+    res = await openai.chat.completions.create(
+        model="gpt-5-nano-2025-08-07",
+        messages=[
+            {"role": "system", "content": "Ты — опытный менеджер по продажам недвижимости. Твоя цель — помочь клиенту выбрать и приобрести квартиру. Общайся вежливо, уверенно и понятно. Задавай уточняющие вопросы, чтобы понять потребности клиента: бюджет, район, количество комнат, этаж, планировка и т.д. Предлагай подходящие варианты, подчеркивай их преимущества (удобная локация, развитая инфраструктура, выгодная цена, комфортная планировка). Отвечай кратко, но информативно, избегай лишней воды. Всегда ориентируйся на выгоду для клиента. Если клиент колеблется — мягко подталкивай к принятию решения. В конце разговора обязательно предложи записаться на просмотр квартиры или оставить контакт для связи."},
+            {"role": "user", "content": text}
+        ]
     )
-    return response.output_text
+    return res.choices[0].message.content
+
