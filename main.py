@@ -45,6 +45,7 @@ async def wait_response(message: Message):
 @router.message()
 async def generate_answer(message: Message, state: FSMContext):
     await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
+    await asyncio.sleep(5)
 
     await state.set_state('generating')
 
