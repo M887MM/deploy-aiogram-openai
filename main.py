@@ -34,9 +34,6 @@ router = Router()
 async def cmd_start(message: Message):
     await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
 
-    # Задержка для демонстрации
-    await asyncio.sleep(2)
-
     await message.answer("Привет! Я бот и печатал это сообщение :)")
     # await message.answer('Добро пожаловать в гпт5!')
 
