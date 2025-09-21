@@ -57,6 +57,7 @@ async def manual_phone_handler(message: Message, state: FSMContext):
         except Exception as e:
             print(f"Ошибка отправки контакта в группу: {e}")
     else:
+        await message.chat.send_action(action="typing")
         # если это не номер, генерируем ответ через GPT
         await state.set_state('generating')
         try:
