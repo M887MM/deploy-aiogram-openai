@@ -7,6 +7,8 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 import os
 from dotenv import load_dotenv
+from aiogram.enums import ChatAction
+import asyncio
 from openai import AsyncOpenAI
 import httpx , openai
 print("httpx version:", httpx.__version__)
@@ -30,7 +32,13 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer('Добро пожаловать в гпт5!')
+    await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
+
+    # Задержка для демонстрации
+    await asyncio.sleep(2)
+
+    await message.answer("Привет! Я бот и печатал это сообщение :)")
+    # await message.answer('Добро пожаловать в гпт5!')
 
 
 @router.message(StateFilter('generating'))
