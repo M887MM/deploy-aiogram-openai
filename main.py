@@ -1,4 +1,3 @@
-
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
@@ -23,7 +22,7 @@ openai.api_key = OPENAI_API_KEY
 async def create_response(text: str):
     res = openai.chat.completions.create(
         model="gpt-5-nano-2025-08-07",
-        messages=[{"role": "user" , "content": text}],
+        messages=[{"role": "user" , "content": text}, { "role": "developer" , "content": "Ты — AI-менеджер по продаже квартир компании Dreamland в Узбекистане. Твоя задача — помогать клиентам подобрать квартиру. В начале общения уточняй у клиента его требования: количество комнат, площадь (кв.м), бюджет, этаж, дополнительные пожелания. Запоминай все ответы клиента. Когда клиент говорит «всё», «ищи», «найди» или аналогичное — фильтруй из базы только те квартиры, которые соответствуют условиям. Сохраняй ID подходящих квартир, чтобы потом передать их менеджеру. Отвечай просто и понятно, как настоящий агент по недвижимости."}],
     )
     return res.choices[0].message.content
 

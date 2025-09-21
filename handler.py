@@ -8,8 +8,11 @@ import re
 router = Router()
 
 # ---------- клавиатура с кнопкой "Поделиться контактом" ----------
-contact_button = KeyboardButton("Отправить контакт", request_contact=True)
-keyboard = ReplyKeyboardMarkup(keyboard=[[contact_button]], resize_keyboard=True)
+contact_button = KeyboardButton(text="Отправить контакт", request_contact=True)
+keyboard = ReplyKeyboardMarkup(
+    keyboard=[[contact_button]],
+    resize_keyboard=True
+)
 
 # ---------- /start ----------
 @router.message(CommandStart())
