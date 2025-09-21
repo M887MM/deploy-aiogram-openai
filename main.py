@@ -32,7 +32,6 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
 
     await message.answer("Привет! Я бот и печатал это сообщение :)")
     # await message.answer('Добро пожаловать в гпт5!')
@@ -45,6 +44,8 @@ async def wait_response(message: Message):
 
 @router.message()
 async def generate_answer(message: Message, state: FSMContext):
+    await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
+
     await state.set_state('generating')
 
     try:
