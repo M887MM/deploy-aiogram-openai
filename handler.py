@@ -1,86 +1,58 @@
-from aiogram import Router
-from aiogram.filters import CommandStart, StateFilter
-from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
-from aiogram.fsm.context import FSMContext
-import re
+from aiogram import Router, types, F, Bot
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.filters import CommandStart
 
+# Подключаем роутер
 router = Router()
 
-# ---------- клавиатура с кнопкой "Поделиться контактом" ----------
-contact_button = KeyboardButton(text="Отправить контакт", request_contact=True)
-keyboard = ReplyKeyboardMarkup(
-    keyboard=[[contact_button]],
-    resize_keyboard=True
-)
+# ID группы менеджеров
+MANAGERS_GROUP_ID = -100123456789  # замените на свой group_id
 
-# ---------- /start ----------
+# Хранилище диалогов
+user_dialogs = {}
+
+# Функция кнопки для отправки номера
+def get_contact_kb():
+    kb = [[KeyboardButton(text="📞 Отправить номер", request_contact=True)]]
+    return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+# Старт
 @router.message(CommandStart())
-async def cmd_start(message: Message):
+async def start(message: types.Message):
     await message.answer(
-        'Добро пожаловать в гпт5! Отправь свой номер телефона или нажми кнопку ниже, чтобы поделиться контактом.',
-        reply_markup=keyboard
+        "Привет! Нажмите кнопку, чтобы отправить номер телефона:",
+        reply_markup=get_contact_kb()
     )
 
-# ---------- обработка контакта через кнопку ----------
-@router.message(lambda message: message.contact is not None)
-async def contact_handler(message: Message):
+# Ловим обычные сообщения и сохраняем их в историю
+@router.message(F.text)
+async def save_message(message: types.Message):
+    user_id = message.from_user.id
+    if user_id not in user_dialogs:
+        user_dialogs[user_id] = []
+    user_dialogs[user_id].append(message.text)
+
+# Ловим контакт
+@router.message(F.contact)
+async def process_contact(message: types.Message, bot: Bot):
+    user_id = message.from_user.id
     phone = message.contact.phone_number
-    user_name = message.from_user.full_name
-    await message.answer(f"Спасибо! Мы получили твой номер: {phone}")
+    name = message.from_user.full_name
 
-    # отправка контакта в группу
-    try:
-        await message.bot.send_message(
-            chat_id=message.bot.dp.bot_group_id,
-            text=f"Новый контакт:\nПользователь: {user_name}\nНомер: {phone}"
-        )
-    except Exception as e:
-        print(f"Ошибка отправки контакта в группу: {e}")
+    # Собираем диалог
+    dialog = "\n".join(user_dialogs.get(user_id, [])) or "Диалог пуст"
 
-# ---------- обработка ручного ввода номера и GPT ----------
-@router.message()
-async def manual_phone_handler(message: Message, state: FSMContext):
-    phone = message.text.strip()
+    # Отправляем менеджерам
+    text = (
+        f"📞 Новый клиент!\n"
+        f"Имя: {name}\n"
+        f"Номер: {phone}\n\n"
+        f"💬 Диалог:\n{dialog}"
+    )
+    await bot.send_message(MANAGERS_GROUP_ID, text)
 
-    # проверка номера
-    pattern = re.compile(r"^(?:\+?998)?(\d{9})$")
-    match = pattern.match(phone)
+    # Подтверждаем клиенту
+    await message.answer("Спасибо! Ваш номер и диалог переданы менеджеру ✅")
 
-    if match:
-        formatted_phone = "+998" + match.group(1)
-        await message.answer(f"Спасибо! Мы сохранили твой номер: {formatted_phone}")
-
-        # отправка номера в группу
-        try:
-            await message.bot.send_message(
-                chat_id=message.bot.dp.bot_group_id,
-                text=f"Новый контакт:\nПользователь: {message.from_user.full_name}\nНомер: {formatted_phone}"
-            )
-        except Exception as e:
-            print(f"Ошибка отправки контакта в группу: {e}")
-    else:
-        await message.chat.send_action(action="typing")
-        # если это не номер, генерируем ответ через GPT
-        await state.set_state('generating')
-        try:
-            response = await create_response(message.text)
-            await message.answer(response)
-
-            # отправляем текст диалога в группу
-            try:
-                await message.bot.send_message(
-                    chat_id=message.bot.dp.bot_group_id,
-                    text=f"Диалог пользователя {message.from_user.full_name}:\n{message.text}\nОтвет GPT:\n{response}"
-                )
-            except Exception as e:
-                print(f"Ошибка отправки диалога в группу: {e}")
-
-        except Exception as e:
-            await message.answer(f'Произошла ошибка: {e}')
-        finally:
-            await state.clear()
-
-# ---------- обработка генерации сообщений ----------
-@router.message(StateFilter('generating'))
-async def wait_response(message: Message):
-    await message.answer('Ожидайте! Идёт генерация ответа...')
+    # Чистим историю
+    user_dialogs.pop(user_id, None)
