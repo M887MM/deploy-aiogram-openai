@@ -50,7 +50,11 @@ async def generate_answer(message: Message, state: FSMContext):
     await state.set_state('generating')
 
     try:
+
         response = await create_response(message.text)
+        while not response:
+            await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
+        
     except Exception as e:
         await message.answer(f'Произошла ошибка: {e}')
     else:
