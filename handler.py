@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart
 router = Router()
 
 # ID группы менеджеров
-MANAGERS_GROUP_ID = -100123456789  # замените на свой group_id
+GROUP_ID = "GROUP_ID"  # замените на свой group_id
 
 # Хранилище диалогов
 user_dialogs = {}
@@ -49,7 +49,7 @@ async def process_contact(message: types.Message, bot: Bot):
         f"Номер: {phone}\n\n"
         f"💬 Диалог:\n{dialog}"
     )
-    await bot.send_message(MANAGERS_GROUP_ID, text)
+    await bot.send_message(GROUP_ID, text)
 
     # Подтверждаем клиенту
     await message.answer("Спасибо! Ваш номер и диалог переданы менеджеру ✅")
