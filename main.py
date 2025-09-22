@@ -32,6 +32,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
+    await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
     await message.answer("Привет! Я бот Dreamland. Расскажите, какую квартиру ищете? 🏠")
 
 
@@ -46,21 +47,24 @@ async def handle_message(message: Message):
     # Если клиент отправил контакт
     if message.contact:
         phone = message.contact.phone_number
-        dialog_text = "\n".join(user_dialogs[user_id])
+        dialog = user_dialogs[user_id]
+        dialog_len = len(dialog)
+
+        username = message.from_user.username or "нет username"
+        first_name = message.from_user.first_name or ""
 
         text_for_manager = (
-            f"📞 Новый клиент!\n"
-            f"Номер: {phone}\n\n"
-            f"Диалог:\n{dialog_text}"
+                f"📞 Новый клиент!\n"
+                f"Имя: {first_name}\n"
+                f"Username: @{username}\n"
+                f"Номер: {phone}\n"
+                f"Сообщений: {dialog_len}\n\n"
+                f"Диалог:\n" + "\n".join(dialog)
         )
-        
         await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
-
         await message.bot.send_message(GROUP_ID, text_for_manager)
-
         await message.answer("✅ Ваша заявка принята! С вами скоро свяжется менеджер.")
 
-        # очистка истории
         user_dialogs[user_id] = []
         return
 
