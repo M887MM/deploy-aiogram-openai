@@ -14,7 +14,7 @@ import httpx , openai
 print("httpx version:", httpx.__version__)
 print("openai version:", openai.__version__)
 
-
+user_dialogs = {}
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("API_KEY")
@@ -32,36 +32,61 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-
-    await message.answer("Привет! Я бот и печатал это сообщение :)")
-    # await message.answer('Добро пожаловать в гпт5!')
-
-
-@router.message(StateFilter('generating'))
-async def wait_response(message: Message):
-    await message.answer('Ожидайте! Идёт генерация ответа...')
+    await message.answer("Привет! Я бот Dreamland. Расскажите, какую квартиру ищете? 🏠")
 
 
 @router.message()
-async def generate_answer(message: Message, state: FSMContext):
-    await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
-    await asyncio.sleep(15)
+async def handle_message(message: Message):
+    user_id = message.from_user.id
 
-    await state.set_state('generating')
+    # Инициализация списка
+    if user_id not in user_dialogs:
+        user_dialogs[user_id] = []
 
-    try:
+    # Если клиент отправил контакт
+    if message.contact:
+        phone = message.contact.phone_number
+        dialog_text = "\n".join(user_dialogs[user_id])
 
-        response = await create_response(message.text)
-        while not response:
-            await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
+        text_for_manager = (
+            f"📞 Новый клиент!\n"
+            f"Номер: {phone}\n\n"
+            f"Диалог:\n{dialog_text}"
+        )
 
-    except Exception as e:
-        await message.answer(f'Произошла ошибка: {e}')
-    else:
-        await message.answer(response)
-    finally:
-        await state.clear()
+        await message.bot.send_message(GROUP_ID, text_for_manager)
 
+        # очистка истории
+        user_dialogs[user_id] = []
+        return
+
+    # Если клиент отправил номер вручную
+    if message.text and message.text.startswith("+"):
+        phone = message.text
+        dialog_text = "\n".join(user_dialogs[user_id])
+
+        text_for_manager = (
+            f"📞 Новый клиент!\n"
+            f"Номер: {phone}\n\n"
+            f"Диалог:\n{dialog_text}"
+        )
+
+        await message.bot.send_message(GROUP_ID, text_for_manager)
+        user_dialogs[user_id] = []
+        return
+
+    # Если обычный текст → отправляем в GPT
+    if message.text:
+        user_dialogs[user_id].append(message.text)
+
+        await message.bot.send_chat_action(message.chat.id, ChatAction.TYPING)
+        await asyncio.sleep(1)
+
+        try:
+            response = await create_response(message.text)
+            await message.answer(response)
+        except Exception as e:
+            await message.answer(f"Ошибка при генерации ответа: {e}")
 bot = Bot(token=os.getenv('TOKEN'))
 GROUP_ID = os.getenv('GROUP_ID')
 
