@@ -53,8 +53,12 @@ async def handle_message(message: Message):
             f"Номер: {phone}\n\n"
             f"Диалог:\n{dialog_text}"
         )
+        
+        await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
 
         await message.bot.send_message(GROUP_ID, text_for_manager)
+
+        await message.answer("✅ Ваша заявка принята! С вами скоро свяжется менеджер.")
 
         # очистка истории
         user_dialogs[user_id] = []
